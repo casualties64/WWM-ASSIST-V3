@@ -1,12 +1,11 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Base ./ allows deployment to any path (GitHub Pages, etc)
-  base: './',
+  // Base path must match your GitHub repository name for Pages deployment
+  base: '/WWM-ASSIST-V3/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

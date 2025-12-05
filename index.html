@@ -6,38 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#1c1917" />
     <title>Winds Meet Assistant</title>
-    <!-- Critical Error Logger -->
-    <script>
-      window.onerror = function(msg, url, line, col, error) {
-        // Only log if the React app hasn't taken over (check for a known element)
-        if (!document.getElementById('root') || document.getElementById('root').innerHTML.includes('Loading App Resources')) {
-            var box = document.createElement('div');
-            box.style.position = 'fixed';
-            box.style.top = '0';
-            box.style.left = '0';
-            box.style.width = '100%';
-            box.style.backgroundColor = 'red';
-            box.style.color = 'white';
-            box.style.padding = '20px';
-            box.style.zIndex = '999999';
-            box.style.whiteSpace = 'pre-wrap';
-            box.innerText = 'CRITICAL STARTUP ERROR:\n' + msg;
-            document.body.appendChild(box);
-        }
-        return false;
-      };
-    </script>
   <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
     "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "ffish-es6": "https://aistudiocdn.com/ffish-es6@^0.7.8",
     "@capacitor/cli": "https://aistudiocdn.com/@capacitor/cli@^7.4.4",
-    "ffish-es6": "https://aistudiocdn.com/ffish-es6@^0.7.8"
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
 }
 </script>
