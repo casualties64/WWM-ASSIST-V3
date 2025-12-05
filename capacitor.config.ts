@@ -13,7 +13,8 @@ const config: CapacitorConfig = {
       'cdn.tailwindcss.com',
       'i.imgur.com',
       'unpkg.com',
-      'play-lh.googleusercontent.com'
+      'play-lh.googleusercontent.com',
+      'preview.redd.it'
     ]
   }
 };

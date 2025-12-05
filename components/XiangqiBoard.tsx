@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { BoardState, PieceColor, PieceType, Piece } from '../types';
 import { getBestMove, boardToFen, initEngine } from '../services/xiangqiEngine';
@@ -42,26 +43,24 @@ const INITIAL_BOARD: BoardState = {
 };
 
 // Custom Piece Images Map 
-// NOTE: Paths are relative (no leading slash) to work with GitHub Pages subdirectories
-// ensure "Public" folder is in your 'public' folder
 const PIECE_IMAGES: Record<string, string> = {
   // Red Pieces
-  [`${PieceColor.RED}_${PieceType.KING}`]: 'Public/redgeneral.png',
-  [`${PieceColor.RED}_${PieceType.ADVISOR}`]: 'Public/redadvisor.png',
-  [`${PieceColor.RED}_${PieceType.ELEPHANT}`]: 'Public/redelephant.png',
-  [`${PieceColor.RED}_${PieceType.HORSE}`]: 'Public/redhorse.png',
-  [`${PieceColor.RED}_${PieceType.ROOK}`]: 'Public/redchariot.png',
-  [`${PieceColor.RED}_${PieceType.CANNON}`]: 'Public/redcannon.png',
-  [`${PieceColor.RED}_${PieceType.PAWN}`]: 'Public/redsoldier.png',
+  [`${PieceColor.RED}_${PieceType.KING}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-adq602hxpa5g1.png?width=40&format=png&auto=webp&s=74bf335b0d7d8a5e4a99c39f2aeae21dd9c978c3',
+  [`${PieceColor.RED}_${PieceType.ADVISOR}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-rdu5u7hxpa5g1.png?width=41&format=png&auto=webp&s=95cedaf6cd481e3859422ca7548e16e7e1f09472',
+  [`${PieceColor.RED}_${PieceType.ELEPHANT}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-9deww1hxpa5g1.png?width=47&format=png&auto=webp&s=bf83ee52eca4340d15076a257fb9fb6e9c870328',
+  [`${PieceColor.RED}_${PieceType.HORSE}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-n2sja1hxpa5g1.png?width=42&format=png&auto=webp&s=72de9ff7cada1a8578f4f52c75dc6dd310bc90b8',
+  [`${PieceColor.RED}_${PieceType.ROOK}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-ww57l1hxpa5g1.png?width=46&format=png&auto=webp&s=975eab8554ab51df03d64b8adaf8202e44d86f15',
+  [`${PieceColor.RED}_${PieceType.CANNON}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-8p6lp2hxpa5g1.png?width=41&format=png&auto=webp&s=f4398d91191ef89b68bd152ab4e780f8947a1969',
+  [`${PieceColor.RED}_${PieceType.PAWN}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-d0trh8hxpa5g1.png?width=37&format=png&auto=webp&s=7654f92e10ff065435738fca6415e79e2cdf0856',
 
   // Black Pieces
-  [`${PieceColor.BLACK}_${PieceType.KING}`]: 'Public/blackgeneral.png',
-  [`${PieceColor.BLACK}_${PieceType.ADVISOR}`]: 'Public/blackadvisor.png',
-  [`${PieceColor.BLACK}_${PieceType.ELEPHANT}`]: 'Public/blackelephant.png',
-  [`${PieceColor.BLACK}_${PieceType.HORSE}`]: 'Public/blackhorse.png',
-  [`${PieceColor.BLACK}_${PieceType.ROOK}`]: 'Public/blackchariot.png',
-  [`${PieceColor.BLACK}_${PieceType.CANNON}`]: 'Public/blackcannon.png',
-  [`${PieceColor.BLACK}_${PieceType.PAWN}`]: 'Public/blacksoldier.png',
+  [`${PieceColor.BLACK}_${PieceType.KING}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-gd28i1hxpa5g1.png?width=45&format=png&auto=webp&s=644424cc7d6e7fb34be91067fd7bb739a6defe9d',
+  [`${PieceColor.BLACK}_${PieceType.ADVISOR}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-ap79tzgxpa5g1.png?width=37&format=png&auto=webp&s=97440b9082591091d67ffcdaa326b74472cb7b56',
+  [`${PieceColor.BLACK}_${PieceType.ELEPHANT}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-4oty91hxpa5g1.png?width=36&format=png&auto=webp&s=06cea360ac5bcbfc3e3796692cc05ea9d737cc57',
+  [`${PieceColor.BLACK}_${PieceType.HORSE}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-dj3jh1hxpa5g1.png?width=41&format=png&auto=webp&s=aa3b31308fd802554d76cb552431d5dfb524fad1',
+  [`${PieceColor.BLACK}_${PieceType.ROOK}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-bvc2cvhxpa5g1.png?width=46&format=png&auto=webp&s=e89d0ccbb00bb197b4ce86c9bc8a05b237264814',
+  [`${PieceColor.BLACK}_${PieceType.CANNON}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-et6671hxpa5g1.png?width=45&format=png&auto=webp&s=cdef404d56b641a46f648bf0d97bf0121e9852b0',
+  [`${PieceColor.BLACK}_${PieceType.PAWN}`]: 'https://preview.redd.it/where-winds-meet-chess-pieces-v0-n9qfx5hxpa5g1.png?width=33&format=png&auto=webp&s=aa34707b1dc5d24a336f1a4ac829886cd18ca9f5',
 };
 
 const SETUP_TOOLS = [
@@ -286,10 +285,10 @@ const PieceIcon: React.FC<{ type: PieceType; color: PieceColor }> = ({ type, col
           src={imageUrl} 
           alt={`${color} ${type}`} 
           onError={(e) => {
-              console.warn(`Failed to load image: ${imageUrl}. Verify "Public" folder is in public/.`);
+              console.warn(`Failed to load image: ${imageUrl}`);
               setImgError(true);
           }} 
-          className="w-[85%] h-[85%] object-contain drop-shadow-sm pointer-events-none select-none z-10"
+          className="w-[95%] h-[95%] object-contain drop-shadow-sm pointer-events-none select-none z-10"
           draggable={false} 
         />
       </div>

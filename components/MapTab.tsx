@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Globe, Map as MapIcon } from 'lucide-react';
 
@@ -31,7 +32,7 @@ export const MapTab: React.FC = () => {
           }`}
         >
           <MapIcon size={16} />
-          <span>Map 2 (6Fast)</span>
+          <span>Map 2 (6Fast)(Chinese Alt)</span>
         </button>
       </div>
 
