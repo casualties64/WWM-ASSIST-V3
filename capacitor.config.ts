@@ -14,7 +14,10 @@ const config: CapacitorConfig = {
       'i.imgur.com',
       'unpkg.com',
       'play-lh.googleusercontent.com',
-      'preview.redd.it'
+      'preview.redd.it',
+      'mapgenie.io',
+      'yysls-map.6fast.com',
+      'boarhat.gg'
     ]
   }
 };

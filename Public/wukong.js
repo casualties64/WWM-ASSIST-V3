@@ -258,7 +258,7 @@ var Engine = function() {
       'P': RED_PAWN,
       'A': RED_ADVISOR,
       'B': RED_BISHOP, 'E': RED_BISHOP,
-      'N': RED_KNIGHT, 'H': RED_BISHOP,
+      'N': RED_KNIGHT, 'H': RED_KNIGHT,
       'C': RED_CANNON,
       'R': RED_ROOK,
       'K': RED_KING,
@@ -1765,3 +1765,4 @@ var Engine = function() {
 
 // export as nodejs module
 if (typeof(exports) != 'undefined') exports.Engine = Engine;
+;
