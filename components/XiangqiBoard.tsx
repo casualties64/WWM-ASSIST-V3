@@ -43,24 +43,25 @@ const INITIAL_BOARD: BoardState = {
 
 // Custom Piece Images Map 
 // NOTE: Paths are relative (no leading slash) to work with GitHub Pages subdirectories
+// ensure "Public" folder is in your 'public' folder
 const PIECE_IMAGES: Record<string, string> = {
   // Red Pieces
-  [`${PieceColor.RED}_${PieceType.KING}`]: 'Chesspieces/redgeneral.png',
-  [`${PieceColor.RED}_${PieceType.ADVISOR}`]: 'Chesspieces/redadvisor.png',
-  [`${PieceColor.RED}_${PieceType.ELEPHANT}`]: 'Chesspieces/redelephant.png',
-  [`${PieceColor.RED}_${PieceType.HORSE}`]: 'Chesspieces/redhorse.png',
-  [`${PieceColor.RED}_${PieceType.ROOK}`]: 'Chesspieces/redchariot.png',
-  [`${PieceColor.RED}_${PieceType.CANNON}`]: 'Chesspieces/redcannon.png',
-  [`${PieceColor.RED}_${PieceType.PAWN}`]: 'Chesspieces/redsoldier.png',
+  [`${PieceColor.RED}_${PieceType.KING}`]: 'Public/redgeneral.png',
+  [`${PieceColor.RED}_${PieceType.ADVISOR}`]: 'Public/redadvisor.png',
+  [`${PieceColor.RED}_${PieceType.ELEPHANT}`]: 'Public/redelephant.png',
+  [`${PieceColor.RED}_${PieceType.HORSE}`]: 'Public/redhorse.png',
+  [`${PieceColor.RED}_${PieceType.ROOK}`]: 'Public/redchariot.png',
+  [`${PieceColor.RED}_${PieceType.CANNON}`]: 'Public/redcannon.png',
+  [`${PieceColor.RED}_${PieceType.PAWN}`]: 'Public/redsoldier.png',
 
   // Black Pieces
-  [`${PieceColor.BLACK}_${PieceType.KING}`]: 'Chesspieces/blackgeneral.png',
-  [`${PieceColor.BLACK}_${PieceType.ADVISOR}`]: 'Chesspieces/blackadvisor.png',
-  [`${PieceColor.BLACK}_${PieceType.ELEPHANT}`]: 'Chesspieces/blackelephant.png',
-  [`${PieceColor.BLACK}_${PieceType.HORSE}`]: 'Chesspieces/blackhorse.png',
-  [`${PieceColor.BLACK}_${PieceType.ROOK}`]: 'Chesspieces/blackchariot.png',
-  [`${PieceColor.BLACK}_${PieceType.CANNON}`]: 'Chesspieces/blackcannon.png',
-  [`${PieceColor.BLACK}_${PieceType.PAWN}`]: 'Chesspieces/blacksoldier.png',
+  [`${PieceColor.BLACK}_${PieceType.KING}`]: 'Public/blackgeneral.png',
+  [`${PieceColor.BLACK}_${PieceType.ADVISOR}`]: 'Public/blackadvisor.png',
+  [`${PieceColor.BLACK}_${PieceType.ELEPHANT}`]: 'Public/blackelephant.png',
+  [`${PieceColor.BLACK}_${PieceType.HORSE}`]: 'Public/blackhorse.png',
+  [`${PieceColor.BLACK}_${PieceType.ROOK}`]: 'Public/blackchariot.png',
+  [`${PieceColor.BLACK}_${PieceType.CANNON}`]: 'Public/blackcannon.png',
+  [`${PieceColor.BLACK}_${PieceType.PAWN}`]: 'Public/blacksoldier.png',
 };
 
 const SETUP_TOOLS = [
@@ -265,11 +266,11 @@ const PieceIcon: React.FC<{ type: PieceType; color: PieceColor }> = ({ type, col
         className={`
           w-full h-full rounded-full flex items-center justify-center 
           relative shadow-[0_2px_4px_rgba(0,0,0,0.4)]
-          ${color === PieceColor.RED ? 'border-[2px] border-[#8b1d1d]' : 'border-[2px] border-[#333]'}
+          ${color === PieceColor.RED ? 'border-[2px] border-[rgb(139,29,29)]' : 'border-[2px] border-[rgb(51,51,51)]'}
         `}
         style={{
           // Realistic wood gradient for the piece body
-          background: 'radial-gradient(circle at 30% 30%, #f7e8c6, #deb887)',
+          background: 'radial-gradient(circle at 30% 30%, rgb(247,232,198), rgb(222,184,135))',
           // Inner lighting/shadow
           boxShadow: 'inset 0 1px 3px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.3)'
         }}
@@ -277,7 +278,7 @@ const PieceIcon: React.FC<{ type: PieceType; color: PieceColor }> = ({ type, col
         {/* Subtle inner groove ring often found on Xiangqi pieces */}
         <div className={`
             absolute inset-[2px] rounded-full border 
-            ${color === PieceColor.RED ? 'border-[#8b1d1d]/30' : 'border-[#1a1a1a]/30'}
+            ${color === PieceColor.RED ? 'border-[rgb(139,29,29)]/30' : 'border-[rgb(26,26,26)]/30'}
         `} />
 
         <img 
@@ -285,7 +286,7 @@ const PieceIcon: React.FC<{ type: PieceType; color: PieceColor }> = ({ type, col
           src={imageUrl} 
           alt={`${color} ${type}`} 
           onError={(e) => {
-              console.warn(`Failed to load image: ${imageUrl}`);
+              console.warn(`Failed to load image: ${imageUrl}. Verify "Public" folder is in public/.`);
               setImgError(true);
           }} 
           className="w-[85%] h-[85%] object-contain drop-shadow-sm pointer-events-none select-none z-10"
