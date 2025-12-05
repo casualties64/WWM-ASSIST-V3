@@ -7,9 +7,9 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-// Fix for type conflicts with @types/node.
-// Augment the existing NodeJS.ProcessEnv interface to include API_KEY.
-// This relies on @types/node being present, which is confirmed by the type error.
+// Manually declare the global process object for the browser environment.
+// This solves "Cannot find name 'process'" without relying on @types/node.
+// Fixed: Replaced conflicting 'declare const process' with namespace augmentation.
 declare namespace NodeJS {
   interface ProcessEnv {
     API_KEY: string;
