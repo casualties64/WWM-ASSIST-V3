@@ -1,4 +1,6 @@
-import { BoardState, PieceColor, PieceType } from '../types';
+
+import { BoardState, PieceColor } from '../types';
+import { GoogleGenAI } from '@google/genai';
 
 // Types for the engine response
 export interface EngineMove {
@@ -14,7 +16,7 @@ export interface MoveCandidate {
 }
 
 export interface EngineResult {
-    bestMove: EngineMove;
+    bestMove: EngineMove | null; // Can be null for terminal positions
     candidates: MoveCandidate[];
     explanation: string;
 }
@@ -22,13 +24,13 @@ export interface EngineResult {
 let engineWorker: Worker | null = null;
 let isReady = false;
 let initPromise: Promise<void> | null = null;
-let currentResolve: ((result: EngineResult | null) => void) | null = null;
+let currentAnalysisRequest: { fen: string, turn: PieceColor, resolve: (result: EngineResult | null) => void } | null = null;
 let analysisBuffer: { candidates: MoveCandidate[], bestMoveNotation?: string } = { candidates: [] };
 
 // Wukong coordinates: 'a0' (bottom-left) to 'i9' (top-right)
 // App coordinates: x=0 (left) to x=8 (right), y=0 (top) to y=9 (bottom)
 const uciToCoords = (uci: string): { from: [number, number], to: [number, number] } | null => {
-    if (!uci || uci.length < 4) return null;
+    if (!uci || uci.length < 4 || uci.includes('x')) return null;
     
     const fileMap: Record<string, number> = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7, 'i': 8 };
     
@@ -59,7 +61,6 @@ export const initEngine = () => {
             
             let wukongPath = '/wukong.js';
             try {
-                // FIX: Removed 'as any' cast now that vite-env.d.ts provides proper types for import.meta.env.
                 const base = import.meta.env.BASE_URL || '/';
                 wukongPath = base.endsWith('/') ? `${base}wukong.js` : `${base}/wukong.js`;
             } catch(e) {
@@ -135,7 +136,7 @@ export const initEngine = () => {
     return initPromise;
 };
 
-const handleEngineOutput = (line: string) => {
+const handleEngineOutput = async (line: string) => {
     if (typeof line !== 'string') return;
     
     if (line.startsWith('info score')) {
@@ -146,10 +147,43 @@ const handleEngineOutput = (line: string) => {
         const parts = line.split(' ');
         analysisBuffer.bestMoveNotation = parts[1];
         
-        if (currentResolve) {
+        if (analysisBuffer.bestMoveNotation === 'xxxx') {
+            if (currentAnalysisRequest) {
+                const result: EngineResult = {
+                    bestMove: null,
+                    candidates: [],
+                    explanation: "Checkmate or stalemate. No legal moves."
+                };
+                currentAnalysisRequest.resolve(result);
+                currentAnalysisRequest = null;
+            }
+            return;
+        }
+        
+        if (currentAnalysisRequest) {
             const result = finalizeResult();
-            currentResolve(result);
-            currentResolve = null;
+
+            if (result && result.bestMove) {
+                try {
+                    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+                    const prompt = `You are a Xiangqi (Chinese Chess) expert. The current board state is given by the FEN: "${currentAnalysisRequest.fen}". The player to move is ${currentAnalysisRequest.turn === 'w' ? 'Red' : 'Black'}. The engine suggests the best move is ${result.bestMove.notation}. The engine's evaluation is ${result.explanation}. Provide a concise, user-friendly explanation for why this is a good move. Focus on the strategic idea behind the move in 1-2 sentences. Example: "This move develops your rook to an active file, preparing to attack the enemy general."`;
+                    
+                    const response = await ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: prompt,
+                    });
+
+                    if (response.text) {
+                        result.explanation = response.text.trim().replace(/^"|"$/g, ''); // Clean quotes
+                    }
+                } catch (e) {
+                    console.error("Gemini explanation failed:", e);
+                    // Do not fail the whole analysis, just use the engine's eval
+                }
+            }
+            
+            currentAnalysisRequest.resolve(result);
+            currentAnalysisRequest = null;
         }
     }
 };
@@ -218,7 +252,7 @@ const finalizeResult = (): EngineResult | null => {
         }
     }
 
-    const result = {
+    const result: EngineResult = {
         bestMove: {
             from: bestMoveCoords.from,
             to: bestMoveCoords.to,
@@ -232,18 +266,23 @@ const finalizeResult = (): EngineResult | null => {
     return result;
 };
 
-export const getBestMove = async (fen: string, depth: number = 7): Promise<EngineResult | null> => {
+export const getBestMove = async (fen: string, turn: PieceColor, depth: number = 7): Promise<EngineResult | null> => {
     await initEngine();
 
     if (!isReady || !engineWorker) {
         console.error("Engine could not be initialized or is not ready.");
         return null;
     }
+    
+    if (currentAnalysisRequest) {
+        console.warn("Analysis already in progress. Ignoring new request.");
+        return null;
+    }
 
     analysisBuffer = { candidates: [] };
 
     return new Promise((resolve) => {
-        currentResolve = resolve;
+        currentAnalysisRequest = { fen, turn, resolve };
         engineWorker!.postMessage({ type: 'analyze', payload: { fen, depth } });
     });
 };

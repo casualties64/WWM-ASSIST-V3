@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { BoardState, PieceColor, PieceType, Piece } from '../types';
-import { getBestMove, boardToFen, initEngine } from '../services/xiangqiEngine';
+import { getBestMove, boardToFen, initEngine, EngineResult } from '../services/xiangqiEngine';
 import { Loader2, RefreshCw, Trash2, ArrowRight, Zap, AlertCircle, Sparkles, Wrench, Hand, Trophy, Cpu } from 'lucide-react';
 
 const INITIAL_BOARD: BoardState = {
@@ -322,7 +323,7 @@ export const XiangqiBoard: React.FC = () => {
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<{ bestMove: any, explanation: string } | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<EngineResult | null>(null);
   
   const [autoAnalyze, setAutoAnalyze] = useState(false);
   const currentFenRef = useRef("");
@@ -378,7 +379,7 @@ export const XiangqiBoard: React.FC = () => {
   };
 
   const handleAnalyze = async () => {
-    if (winner) return;
+    if (winner || isAnalyzing) return;
 
     const fenToAnalyze = boardToFen(board, turn);
     
@@ -390,7 +391,7 @@ export const XiangqiBoard: React.FC = () => {
     }
     
     try {
-        const result = await getBestMove(fenToAnalyze, 7); // Depth 7 for stronger play
+        const result = await getBestMove(fenToAnalyze, turn, 7); // Depth 7 for stronger play
         
         // Stale check
         if (fenToAnalyze !== currentFenRef.current) {
@@ -400,12 +401,11 @@ export const XiangqiBoard: React.FC = () => {
         
         if (result && result.bestMove) {
             // Repetition Check
-            // Iterate candidates to find the best non-repetitive move
             let selectedMove = result.bestMove;
-            let explanation = result.explanation;
 
             if (result.candidates && result.candidates.length > 0) {
                 for (const candidate of result.candidates) {
+                    if (!candidate.move) continue;
                     const cMoveRec: MoveRecord = { 
                         from: `${candidate.move.from[0]},${candidate.move.from[1]}`,
                         to: `${candidate.move.to[0]},${candidate.move.to[1]}`
@@ -416,28 +416,27 @@ export const XiangqiBoard: React.FC = () => {
                         continue;
                     }
                     
-                    // Found a valid move
                     selectedMove = candidate.move;
-                    if (candidate !== result.candidates[0]) {
-                        explanation = `Score: ${(candidate.score/100).toFixed(2)} (Alternative chosen to avoid repetition)`;
-                    }
                     break;
                 }
             }
             
-            // Validate the chosen move
             const [fx, fy] = selectedMove.from;
             const [tx, ty] = selectedMove.to;
             const isLegal = isValidMove(board, fx, fy, tx, ty, turn);
 
             if (isLegal) {
-                setAnalysisResult({ bestMove: selectedMove, explanation });
+                setAnalysisResult(result);
                 setAnalysisError(false);
             } else {
                 console.warn("Engine suggested illegal move:", selectedMove);
                 setAnalysisError(true);
                 if (!autoAnalyze) setAnalysisResult(null);
             }
+        } else if (result && result.bestMove === null) {
+            // Handle terminal positions (checkmate/stalemate)
+            setAnalysisResult(result);
+            setAnalysisError(false);
         } else {
             setAnalysisError(true);
             if (!autoAnalyze) setAnalysisResult(null);
@@ -914,28 +913,30 @@ export const XiangqiBoard: React.FC = () => {
                         <div className="bg-stone-900/80 p-5 rounded-xl border border-stone-800 animate-in fade-in slide-in-from-bottom-2">
                             <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
                                 <span className="text-xs font-bold uppercase text-stone-500 tracking-wider">Best Move</span>
-                                <span className="text-amber-500 font-mono font-bold text-lg">{analysisResult.bestMove.notation}</span>
+                                <span className="text-amber-500 font-mono font-bold text-lg">{analysisResult.bestMove ? analysisResult.bestMove.notation : 'N/A'}</span>
                             </div>
                             
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="w-10 h-10 bg-stone-800 rounded-full flex items-center justify-center text-stone-400 font-mono text-xs">
-                                        {analysisResult.bestMove.from.join(',')}
+                            {analysisResult.bestMove && (
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="w-10 h-10 bg-stone-800 rounded-full flex items-center justify-center text-stone-400 font-mono text-xs">
+                                            {analysisResult.bestMove.from.join(',')}
+                                        </div>
+                                        <span className="text-[10px] text-stone-600 uppercase">From</span>
                                     </div>
-                                    <span className="text-[10px] text-stone-600 uppercase">From</span>
-                                </div>
-                                <ArrowRight className="text-stone-600" />
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="w-10 h-10 bg-emerald-900/30 border border-emerald-800 text-emerald-400 rounded-full flex items-center justify-center font-mono text-xs shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                                        {analysisResult.bestMove.to.join(',')}
+                                    <ArrowRight className="text-stone-600" />
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className="w-10 h-10 bg-emerald-900/30 border border-emerald-800 text-emerald-400 rounded-full flex items-center justify-center font-mono text-xs shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                                            {analysisResult.bestMove.to.join(',')}
+                                        </div>
+                                        <span className="text-[10px] text-stone-600 uppercase">To</span>
                                     </div>
-                                    <span className="text-[10px] text-stone-600 uppercase">To</span>
                                 </div>
-                            </div>
+                            )}
                             
                             <div className="bg-stone-950 p-3 rounded-lg border-l-2 border-amber-600">
                                 <p className="text-sm text-stone-300 leading-relaxed italic">
-                                    "{analysisResult.explanation}"
+                                    {analysisResult.explanation}
                                 </p>
                             </div>
                         </div>
