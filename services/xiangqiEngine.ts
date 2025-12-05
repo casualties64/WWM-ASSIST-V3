@@ -57,18 +57,15 @@ export const initEngine = () => {
         try {
             console.log("[Wukong Engine] Initializing...");
             
-            let wukongPath = '/wukong.js';
-            try {
-                // Ensure we use the correct base path for deployment
-                const base = import.meta.env.BASE_URL || '/';
-                wukongPath = base.endsWith('/') ? `${base}wukong.js` : `${base}/wukong.js`;
-            } catch(e) {
-                console.warn("Could not access import.meta.env, using default path for Wukong engine.");
-            }
+            // Use relative path. In production (GitHub Pages), this resolves to 
+            // https://[user].github.io/[repo]/wukong.js because index.html is in [repo]/.
+            // In dev, it resolves to localhost:port/wukong.js.
+            // This bypasses issues with import.meta.env.BASE_URL.
+            const wukongPath = 'wukong.js'; 
             
             const response = await fetch(wukongPath);
             if (!response.ok) {
-              throw new Error(`Failed to fetch Wukong script from ${wukongPath}`);
+              throw new Error(`Failed to fetch Wukong script from ${wukongPath} (Status: ${response.status})`);
             }
             const engineScriptContent = await response.text();
 
