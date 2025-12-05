@@ -8,6 +8,15 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
+// Augment NodeJS namespace to add API_KEY to ProcessEnv.
+// This works because the error indicates 'process' is already defined with type 'Process' (from @types/node).
+declare namespace NodeJS {
+  interface ProcessEnv {
+    API_KEY: string;
+    [key: string]: string | undefined;
+  }
+}
+
 declare module '*.png' {
   const value: string;
   export default value;
