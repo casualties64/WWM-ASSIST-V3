@@ -59,6 +59,7 @@ export const initEngine = () => {
             
             let wukongPath = '/wukong.js';
             try {
+                // Ensure we use the correct base path for deployment
                 const base = import.meta.env.BASE_URL || '/';
                 wukongPath = base.endsWith('/') ? `${base}wukong.js` : `${base}/wukong.js`;
             } catch(e) {
@@ -168,9 +169,6 @@ const handleEngineOutput = async (line: string) => {
             return;
         }
 
-        // We use the static engine evaluation string as the explanation.
-        // Previously this used Gemini AI, but it has been removed.
-        
         currentAnalysisRequest.resolve(result);
         currentAnalysisRequest = null;
     }
@@ -231,12 +229,22 @@ const finalizeResult = (): EngineResult | null => {
     const bestCandidate = analysisBuffer.candidates.find(c => c.move.notation === analysisBuffer.bestMoveNotation) || analysisBuffer.candidates[0];
     
     let scoreDisplay = "?";
+    let explanationText = "";
+
     if (bestCandidate) {
         if (Math.abs(bestCandidate.score) > 30000) {
              const mateIn = 32000 - Math.abs(bestCandidate.score);
              scoreDisplay = `Mate in ${mateIn}`;
+             explanationText = `Checkmate sequence found in ${mateIn} moves.`;
         } else {
-             scoreDisplay = (bestCandidate.score / 100).toFixed(2);
+             const scoreVal = bestCandidate.score / 100; // Convert centipawns to pawns
+             scoreDisplay = scoreVal > 0 ? `+${scoreVal.toFixed(2)}` : scoreVal.toFixed(2);
+             
+             if (scoreVal > 2) explanationText = "Red has a decisive winning advantage.";
+             else if (scoreVal > 0.5) explanationText = "Red has a slight advantage.";
+             else if (scoreVal > -0.5) explanationText = "The position is roughly balanced.";
+             else if (scoreVal > -2) explanationText = "Black has a slight advantage.";
+             else explanationText = "Black has a decisive winning advantage.";
         }
     }
 
@@ -247,7 +255,7 @@ const finalizeResult = (): EngineResult | null => {
             notation: analysisBuffer.bestMoveNotation
         },
         candidates: analysisBuffer.candidates,
-        explanation: `Evaluation Score: ${scoreDisplay}`
+        explanation: `Evaluation Score: ${scoreDisplay}. ${explanationText}`
     };
 
     analysisBuffer = { candidates: [] };
