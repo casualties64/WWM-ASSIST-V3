@@ -9,8 +9,8 @@ const __dirname = path.dirname(__filename);
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Base path must match your GitHub repository name for Pages deployment
-  base: '/WWM-ASSIST-V3/',
+  // Base path set to root ('/') for custom domain usage (e.g., wwmcompanion.dev)
+  base: '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './'),
