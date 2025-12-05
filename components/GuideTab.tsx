@@ -139,14 +139,14 @@ export const GuideTab: React.FC = () => {
             <div className="max-w-5xl mx-auto w-full p-4 lg:p-8 space-y-8 animate-in fade-in duration-300 pb-24">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-stone-800 to-stone-900 p-6 rounded-xl border border-stone-700 shadow-lg">
-                    <h1 className="text-2xl md:text-3xl font-bold text-amber-500 mb-2">General Guide</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-amber-500 mb-2">App Guide (General)</h1>
                     <p className="text-stone-400 text-sm md:text-base italic">Introduction</p>
                     <p className="text-stone-300 text-sm md:text-base mt-2">
                     This guide focuses on efficiency, scaling, and input precision. It is written for players who want to optimize their account long term instead of guessing or over-farming.
                     </p>
                 </div>
-                {/* ... (Existing Internal Guide Content) ... */}
-                 {/* Scope */}
+
+                {/* Scope */}
                 <section className="space-y-4">
                     <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
                         <Info size={20} className="text-amber-500" /> Scope
@@ -160,7 +160,339 @@ export const GuideTab: React.FC = () => {
                         <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0"/> Gear, Resonance, weekly systems, and co-op</li>
                     </ul>
                 </section>
-                {/* (Truncated for brevity - keeping existing internal content structure) */}
+
+                {/* Daily & Weekly Routine */}
+                <section className="space-y-4">
+                    <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
+                        <CheckSquare size={20} className="text-amber-500" /> Daily & Weekly Routine
+                    </h2>
+                    
+                    <div className="space-y-6">
+                        {/* Daily Checklist */}
+                        <div className="bg-stone-900/50 p-4 rounded-lg border border-stone-800">
+                            <h3 className="text-amber-500 font-bold mb-3 uppercase text-sm tracking-wide">Daily Checklist</h3>
+                            <ol className="list-decimal pl-5 space-y-3 text-stone-300 text-sm">
+                                <li>
+                                    <strong className="text-stone-200">Spend Mental Energy</strong>
+                                    <p className="text-stone-400 text-xs">Never let it cap. Use it on one stronghold or any small objective.</p>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Complete one casual activity</strong>
+                                    <p className="text-stone-400 text-xs">Pitch-Pot is quickest.</p>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Visit your home</strong>
+                                    <p className="text-stone-400 text-xs">Use the grooming interaction. (Blissful retreat -> House on left -> Table mirror).</p>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Buy daily/weekly-limited materials</strong>
+                                    <p className="text-stone-400 text-xs mb-1">Prioritize useful items with limited stock.</p>
+                                    <ul className="list-disc pl-4 text-xs text-stone-500 space-y-1">
+                                        <li>Menu &gt; Shop &gt; Items: Lingering Melody</li>
+                                        <li>Menu &gt; Season &gt; Season Shop: Oscillating Jade, Life Supplies Support Box, Martial Arts Chest, Inner Way Note Chest, Small Box of Commerce Coins</li>
+                                        <li>If you see raw ore / coarse fur: buy all 99.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Handle guild events (if unlocked)</strong>
+                                    <p className="text-stone-400 text-xs">Start multi-day chains early.</p>
+                                </li>
+                            </ol>
+                        </div>
+
+                        {/* Weekly Checklist */}
+                        <div className="bg-stone-900/50 p-4 rounded-lg border border-stone-800">
+                            <h3 className="text-amber-500 font-bold mb-3 uppercase text-sm tracking-wide">Weekly Checklist</h3>
+                            <ol className="list-decimal pl-5 space-y-3 text-stone-300 text-sm">
+                                <li>
+                                    <strong className="text-stone-200">Weekly Dungeon (Hero's Realm)</strong>
+                                    <p className="text-stone-400 text-xs">Do before reset. Ideally later in the week after upgrades. Can do twice if in a guild.</p>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Use weekly jade fish and echo jades</strong>
+                                    <p className="text-stone-400 text-xs">Spend on internal arts, skill breakthroughs. (Jade fish: Season Shop, Echo jade: Merchants).</p>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Stronghold farming</strong>
+                                    <p className="text-stone-400 text-xs">&lt;Lv40: prevent Mental Energy cap. &gt;Lv40: target boss strongholds for set gear.</p>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Recycle unused gear</strong>
+                                    <p className="text-stone-400 text-xs">Every replaced item should be dismantled.</p>
+                                </li>
+                                <li>
+                                    <strong className="text-stone-200">Finish multi-day sect/guild tasks</strong>
+                                    <p className="text-stone-400 text-xs">Start early to avoid missing weekly completion.</p>
+                                </li>
+                            </ol>
+                        </div>
+
+                         {/* Avoiding Waste */}
+                         <div className="bg-red-950/20 p-4 rounded-lg border border-red-900/30">
+                            <h3 className="text-red-400 font-bold mb-3 uppercase text-sm tracking-wide flex items-center gap-2"><AlertTriangle size={16}/> Avoiding Waste</h3>
+                            <ul className="space-y-2 text-stone-300 text-sm">
+                                <li><strong className="text-stone-200">Mental Energy rewards scale:</strong> Don’t farm heavily until mid-game.</li>
+                                <li><strong className="text-stone-200">Weekly dungeon mats are exclusive:</strong> Skipping = permanent loss.</li>
+                                <li><strong className="text-stone-200">Weekly shop mats compound:</strong> Always buy them.</li>
+                                <li><strong className="text-stone-200">Recycling is progression:</strong> Dismantle blue/low-level gear. You'll need mats for tuning later.</li>
+                                <li><strong className="text-stone-200">Weekly caps &gt; daily tasks:</strong> Hit weekly limits first.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Resets & Schedules */}
+                <section className="space-y-4">
+                    <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
+                        <Clock size={20} className="text-amber-500" /> Daily & Weekly Resets/Schedules
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
+                             <h3 className="font-bold text-white mb-2">Reset Timings</h3>
+                             <p className="text-sm text-stone-400">New Day: <strong>21:00 UST</strong></p>
+                             <p className="text-sm text-stone-400">New Week: <strong>Monday</strong></p>
+                         </div>
+                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800 space-y-2">
+                             <div>
+                                 <strong className="text-amber-500 text-sm block">Saturday & Sunday</strong>
+                                 <p className="text-xs text-stone-400">Guild war, Fireworks (Kaifeng), Buying merchant commodities.</p>
+                             </div>
+                             <div>
+                                 <strong className="text-amber-500 text-sm block">Monday Onwards</strong>
+                                 <p className="text-xs text-stone-400">Weekly shop reset, Bond lvl refresh, Raids (10-man, 5-man, Guild), Sect/BP Caps refresh.</p>
+                             </div>
+                             <div>
+                                 <strong className="text-amber-500 text-sm block">Wednesday Onwards</strong>
+                                 <p className="text-xs text-stone-400">Selling commodities to other players.</p>
+                             </div>
+                         </div>
+                    </div>
+                </section>
+
+                {/* Settings & Optimization */}
+                <section className="space-y-6">
+                    <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
+                        <Monitor size={20} className="text-amber-500" /> Settings & Optimization
+                    </h2>
+                    <p className="text-sm text-stone-400">These configurations ensure smooth combat timing. Stability and clarity take priority over visual quality.</p>
+
+                    {/* Display & Graphics */}
+                    <div>
+                        <h3 className="font-bold text-stone-200 mb-2 flex items-center gap-2"><Video size={16}/> Display & Graphics</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-stone-300">
+                                <thead className="text-xs text-stone-400 uppercase bg-stone-800">
+                                    <tr>
+                                        <th className="px-4 py-2 rounded-tl-lg">Setting</th>
+                                        <th className="px-4 py-2">Value</th>
+                                        <th className="px-4 py-2 rounded-tr-lg">Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-stone-900/50">
+                                    <tr className="border-b border-stone-800">
+                                        <td className="px-4 py-2 font-medium">Display Mode</td>
+                                        <td className="px-4 py-2 text-amber-500">Fullscreen</td>
+                                        <td className="px-4 py-2 text-stone-500">Prevents focus loss and hitching.</td>
+                                    </tr>
+                                    <tr className="border-b border-stone-800">
+                                        <td className="px-4 py-2 font-medium">FPS Limit</td>
+                                        <td className="px-4 py-2 text-amber-500">Uncapped / 120+</td>
+                                        <td className="px-4 py-2 text-stone-500">Smoother input timing.</td>
+                                    </tr>
+                                    <tr className="border-b border-stone-800">
+                                        <td className="px-4 py-2 font-medium">V-Sync</td>
+                                        <td className="px-4 py-2 text-amber-500">Off</td>
+                                        <td className="px-4 py-2 text-stone-500">Reduces input delay.</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2 font-medium">Motion Blur</td>
+                                        <td className="px-4 py-2 text-amber-500">Off</td>
+                                        <td className="px-4 py-2 text-stone-500">Improves clarity.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Control Layout */}
+                    <div>
+                        <h3 className="font-bold text-stone-200 mb-2 flex items-center gap-2"><Gamepad2 size={16}/> Control Layout</h3>
+                        <div className="bg-stone-900/50 p-4 rounded border border-stone-800 text-sm">
+                            <p className="mb-3 text-stone-400">Bind offensive (keyboard) and defensive (mouse) tools separately to prevent conflict.</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <ul className="space-y-1">
+                                    <li className="flex justify-between"><span className="text-stone-500">Light Attack</span> <span className="text-stone-200">LMB</span></li>
+                                    <li className="flex justify-between"><span className="text-stone-500">Parry</span> <span className="text-stone-200">Forward Mouse Btn</span></li>
+                                    <li className="flex justify-between"><span className="text-stone-500">Dodge</span> <span className="text-stone-200">Back Mouse Btn</span></li>
+                                </ul>
+                                <ul className="space-y-1">
+                                    <li className="flex justify-between"><span className="text-stone-500">Weapon Skill</span> <span className="text-stone-200">Q / E</span></li>
+                                    <li className="flex justify-between"><span className="text-stone-500">Mystic Arts</span> <span className="text-stone-200">1–4</span></li>
+                                    <li className="flex justify-between"><span className="text-stone-500">Movement</span> <span className="text-stone-200">F</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Camera Config */}
+                    <div>
+                        <h3 className="font-bold text-stone-200 mb-2">Camera Configuration</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-stone-300">
+                                <thead className="text-xs text-stone-400 uppercase bg-stone-800">
+                                    <tr>
+                                        <th className="px-4 py-2 rounded-tl-lg">Setting</th>
+                                        <th className="px-4 py-2">Value</th>
+                                        <th className="px-4 py-2 rounded-tr-lg">Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-stone-900/50">
+                                    <tr className="border-b border-stone-800">
+                                        <td className="px-4 py-2">Camera Distance</td>
+                                        <td className="px-4 py-2 text-amber-500">Wide</td>
+                                        <td className="px-4 py-2 text-stone-500">Improves awareness.</td>
+                                    </tr>
+                                    <tr className="border-b border-stone-800">
+                                        <td className="px-4 py-2">Horizontal Sens</td>
+                                        <td className="px-4 py-2 text-amber-500">6–8</td>
+                                        <td className="px-4 py-2 text-stone-500">Smooth tracking.</td>
+                                    </tr>
+                                    <tr className="border-b border-stone-800">
+                                        <td className="px-4 py-2">Vertical Sens</td>
+                                        <td className="px-4 py-2 text-amber-500">5–6</td>
+                                        <td className="px-4 py-2 text-stone-500">Prevents over-aiming.</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="px-4 py-2">Camera Correction</td>
+                                        <td className="px-4 py-2 text-amber-500">Off / Close</td>
+                                        <td className="px-4 py-2 text-stone-500">Avoids disruption.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
+                            <strong className="text-stone-200 block mb-2">Network Settings</strong>
+                            <p className="text-stone-400 mb-1">Use wired Ethernet. Avoid VPNs unless they lower ping significantly.</p>
+                            <p className="text-xs text-stone-500 italic">Consistent latency > Raw speed.</p>
+                        </div>
+                        <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
+                            <strong className="text-stone-200 block mb-2">Performance Checklist</strong>
+                            <ul className="list-disc pl-5 text-stone-400 space-y-1">
+                                <li>Cap FPS only if heating occurs.</li>
+                                <li>Update GPU drivers (DX12).</li>
+                                <li>Close overlays (Discord/Steam).</li>
+                                <li>Run from SSD.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Pre-Game Configuration */}
+                <section className="space-y-4">
+                    <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
+                        <Settings size={20} className="text-amber-500" /> Pre-Game Configuration
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
+                             <strong className="text-amber-500 block mb-1">Guidance Mode</strong>
+                             <p className="text-stone-300 mb-2"><strong>Detailed:</strong> Recommended for start.</p>
+                             <p className="text-stone-300"><strong>Moderate:</strong> Switch later for cleaner UI.</p>
+                         </div>
+                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
+                             <strong className="text-amber-500 block mb-1">Operation Mode</strong>
+                             <p className="text-stone-300 mb-2"><strong>ARPG:</strong> Recommended (Auto-cam).</p>
+                             <p className="text-stone-300"><strong>MMORPG:</strong> Manual drag.</p>
+                         </div>
+                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
+                             <strong className="text-amber-500 block mb-1">Game Difficulty</strong>
+                             <p className="text-stone-300 mb-2"><strong>Recommended:</strong> Balanced.</p>
+                             <p className="text-stone-300"><strong>Legend/Hardcore:</strong> Permanent difficulty/Permadeath.</p>
+                         </div>
+                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
+                             <strong className="text-amber-500 block mb-1">Social Tendency</strong>
+                             <p className="text-stone-300"><strong>Shared Journey:</strong> Recommended (Enables Co-op/Trade).</p>
+                         </div>
+                    </div>
+                    <div className="bg-stone-900/50 p-4 rounded border border-stone-800 text-sm">
+                         <strong className="text-amber-500 block mb-1">Character & Talents</strong>
+                         <p className="text-stone-300 mb-2">First 3 edits are free. Create final look early.</p>
+                         <p className="text-stone-300"><strong>Recommended Talent:</strong> <em>Rhetoric Edge</em> (Improves persuasion in quests).</p>
+                    </div>
+                </section>
+
+                {/* Progression */}
+                <section className="space-y-4">
+                     <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
+                        <TrendingUp size={20} className="text-amber-500" /> Progression & Leveling
+                    </h2>
+                    <div className="bg-stone-800/50 p-4 rounded text-sm text-stone-300 space-y-3 border-l-4 border-amber-600">
+                        <p><strong>1. Always push Main Story first.</strong> XP cap and breakthroughs are tied to it.</p>
+                        <p><strong>2. Perform breakthroughs immediately</strong> when hitting a level cap.</p>
+                        <p><strong>3. Use remaining time</strong> for daily/weekly tasks, exploration, and side quests only after story progress is blocked by current patch limits.</p>
+                    </div>
+                </section>
+
+                {/* Exchange Codes */}
+                <section className="space-y-4">
+                     <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
+                        <Gift size={20} className="text-amber-500" /> Exchange Codes
+                    </h2>
+                    <p className="text-xs text-stone-500">Input in Settings &gt; Other &gt; Exchange Code</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-emerald-900/20 border border-emerald-800 p-4 rounded">
+                            <strong className="text-emerald-400 block mb-2 uppercase text-xs tracking-wider">Ongoing</strong>
+                            <ul className="space-y-1 font-mono text-sm text-stone-300">
+                                <li>WWMGLyoutube</li>
+                                <li>WWMGLtiktok</li>
+                                <li>WWM251115</li>
+                            </ul>
+                        </div>
+                        <div className="bg-stone-900/50 border border-stone-800 p-4 rounded opacity-75">
+                            <strong className="text-stone-500 block mb-2 uppercase text-xs tracking-wider">Expired</strong>
+                            <ul className="space-y-1 font-mono text-sm text-stone-500 line-through">
+                                <li>WWMGO1114</li>
+                                <li>WWMGO1115</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                {/* FAQ */}
+                <section className="space-y-4">
+                     <h2 className="text-xl font-bold text-stone-200 border-b border-stone-700 pb-2 flex items-center gap-2">
+                        <HelpCircle size={20} className="text-amber-500" /> Frequently Asked Questions
+                    </h2>
+                    <div className="space-y-4">
+                        <div className="bg-stone-900/30 p-4 rounded border border-stone-800">
+                            <p className="font-bold text-stone-200 mb-1">"Why did Hero's Realm attempt not count into the Guild event?"</p>
+                            <p className="text-sm text-stone-400">If in a guild, you can do it twice. The second run counts for guild events and gives rewards at the end.</p>
+                        </div>
+                        <div className="bg-stone-900/30 p-4 rounded border border-stone-800">
+                            <p className="font-bold text-stone-200 mb-1">"Where is the 5v5 arena?"</p>
+                            <p className="text-sm text-stone-400">As of 25/11/2025, it is not yet released.</p>
+                        </div>
+                        <div className="bg-stone-900/30 p-4 rounded border border-stone-800">
+                            <p className="font-bold text-stone-200 mb-1">"I am dying in PvP / Combat Mastery is low"</p>
+                            <p className="text-sm text-stone-400">Focus on ONE martial path (e.g., Bellstrike) to avoid spreading resources too thin.</p>
+                        </div>
+                         <div className="bg-stone-900/30 p-4 rounded border border-stone-800">
+                            <p className="font-bold text-stone-200 mb-1">"Outposts vs Campaign Challenge?"</p>
+                            <p className="text-sm text-stone-400">Outposts for resources (Ebon Iron). Campaign for specific set gear.</p>
+                        </div>
+                         <div className="bg-stone-900/30 p-4 rounded border border-stone-800">
+                            <p className="font-bold text-stone-200 mb-1">"20 co-op poses is tiring!"</p>
+                            <p className="text-sm text-stone-400">Have a friend stay in a pose. Press F -&gt; Move away -&gt; Repeat x20.</p>
+                        </div>
+                         <div className="bg-stone-900/30 p-4 rounded border border-stone-800">
+                            <p className="font-bold text-stone-200 mb-1">"Clearing Guild Transporter is a pain"</p>
+                            <p className="text-sm text-stone-400">Hover over the needed item and click the suggested merchant for instant access.</p>
+                        </div>
+                    </div>
+                </section>
+
                  <section className="bg-gradient-to-br from-stone-800 to-stone-900 p-6 rounded-xl border border-stone-700 text-center space-y-4">
                     <h2 className="text-xl font-bold text-white">Final Notes - Join our guild ;)</h2>
                     <p className="text-sm text-stone-400 italic">
