@@ -182,7 +182,7 @@ export const GuideTab: React.FC = () => {
                                 </li>
                                 <li>
                                     <strong className="text-stone-200">Visit your home</strong>
-                                    <p className="text-stone-400 text-xs">Use the grooming interaction. (Blissful retreat -> House on left -> Table mirror).</p>
+                                    <p className="text-stone-400 text-xs">Use the grooming interaction. (Blissful retreat -&gt; House on left -&gt; Table mirror).</p>
                                 </li>
                                 <li>
                                     <strong className="text-stone-200">Buy daily/weekly-limited materials</strong>
@@ -376,7 +376,7 @@ export const GuideTab: React.FC = () => {
                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
                             <strong className="text-stone-200 block mb-2">Network Settings</strong>
                             <p className="text-stone-400 mb-1">Use wired Ethernet. Avoid VPNs unless they lower ping significantly.</p>
-                            <p className="text-xs text-stone-500 italic">Consistent latency > Raw speed.</p>
+                            <p className="text-xs text-stone-500 italic">Consistent latency &gt; Raw speed.</p>
                         </div>
                         <div className="bg-stone-900/50 p-4 rounded border border-stone-800">
                             <strong className="text-stone-200 block mb-2">Performance Checklist</strong>
