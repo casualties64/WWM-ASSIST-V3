@@ -1,3 +1,4 @@
+
 import { BoardState, PieceColor, PieceType } from '../types';
 
 // Types for the engine response
@@ -53,15 +54,83 @@ const uciToCoords = (uci: string): { from: [number, number], to: [number, number
     };
 };
 
+async function fetchStockfishScript(): Promise<{ content: string, url: string }> {
+    const pathsToTry = [];
+    
+    // 1. Try constructed path from Vite env
+    // Use type assertion to safely access import.meta.env
+    const meta = import.meta as any;
+    let envBase = (meta && meta.env && meta.env.BASE_URL) ? meta.env.BASE_URL : '/';
+    if (!envBase.endsWith('/')) envBase += '/';
+    
+    // Configured path
+    pathsToTry.push(`${envBase}fairy-stockfish/stockfish.js`);
+    
+    // 2. Try standard public folder path (often works in dev)
+    pathsToTry.push('/fairy-stockfish/stockfish.js');
+    
+    // 3. Try relative path (fallback)
+    pathsToTry.push('fairy-stockfish/stockfish.js');
+
+    // Remove duplicates
+    const uniquePaths = [...new Set(pathsToTry)];
+
+    for (const path of uniquePaths) {
+        try {
+            // Resolve against current location to get absolute URL for fetch
+            // This handles cases where window.location is in a subdir
+            const resolvedUrl = new URL(path, window.location.href).toString();
+            const response = await fetch(resolvedUrl);
+            if (response.ok) {
+                const content = await response.text();
+                // Basic validation to ensure we didn't get an HTML 404 page
+                if (content.trim().startsWith('<!DOCTYPE html>') || content.trim().startsWith('<html')) {
+                    console.warn(`Path ${path} returned HTML instead of JS, skipping.`);
+                    continue;
+                }
+                console.log(`[Xiangqi Engine] Successfully loaded engine from: ${resolvedUrl}`);
+                return { content, url: resolvedUrl };
+            }
+        } catch (e) {
+            console.warn(`[Xiangqi Engine] Failed to fetch stockfish from ${path}`, e);
+        }
+    }
+    throw new Error("Could not load stockfish.js from any candidate path. Please ensure 'public/fairy-stockfish/stockfish.js' exists.");
+}
+
 export const initEngine = async () => {
     if (engineWorker) return;
 
     try {
-        // Dynamic path based on environment to support GitHub Pages base URL
-        const basePath = import.meta.env.BASE_URL || '/';
-        const workerUrl = `${basePath}fairy-stockfish/stockfish.js`.replace('//', '/');
+        console.log("[Xiangqi Engine] Initializing...");
+        
+        // Fetch the script content first to avoid importScripts() CORS/Path issues in Blob
+        const { content: scriptContent, url: scriptUrl } = await fetchStockfishScript();
+        
+        // Calculate WASM URL based on the successful JS URL
+        // We assume stockfish.wasm is in the same directory
+        const wasmUrl = scriptUrl.replace('stockfish.js', 'stockfish.wasm');
 
-        engineWorker = new Worker(workerUrl);
+        // Create a blob worker. We embed the script content directly.
+        // We also inject the Module configuration so it finds the WASM file correctly.
+        const blobContent = `
+            var Module = {
+                locateFile: function(path, prefix) {
+                    if (path.indexOf('stockfish.wasm') > -1) {
+                        return '${wasmUrl}';
+                    }
+                    return prefix + path;
+                }
+            };
+            // End of Module config
+            
+            ${scriptContent}
+        `;
+
+        const blob = new Blob([blobContent], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
+
+        engineWorker = new Worker(blobUrl);
 
         engineWorker.onmessage = (e) => {
             const line = e.data;
@@ -72,6 +141,7 @@ export const initEngine = async () => {
                 engineWorker?.postMessage('isready');
             } else if (line === 'readyok') {
                 isReady = true;
+                console.log("[Xiangqi Engine] Ready!");
             } else {
                 handleEngineOutput(line);
             }
