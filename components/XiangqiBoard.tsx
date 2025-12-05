@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { BoardState, PieceColor, PieceType, Piece } from '../types';
 import { getBestMove, boardToFen, initEngine } from '../services/xiangqiEngine';
@@ -42,25 +41,26 @@ const INITIAL_BOARD: BoardState = {
   "8,6": { id: "rp5", type: PieceType.PAWN, color: PieceColor.RED },
 };
 
-// Custom Piece Images Map - Absolute paths to ensure they load from root
+// Custom Piece Images Map 
+// NOTE: Paths are relative (no leading slash) to work with GitHub Pages subdirectories
 const PIECE_IMAGES: Record<string, string> = {
   // Red Pieces
-  [`${PieceColor.RED}_${PieceType.KING}`]: '/Chesspieces/redgeneral.png',
-  [`${PieceColor.RED}_${PieceType.ADVISOR}`]: '/Chesspieces/redadvisor.png',
-  [`${PieceColor.RED}_${PieceType.ELEPHANT}`]: '/Chesspieces/redelephant.png',
-  [`${PieceColor.RED}_${PieceType.HORSE}`]: '/Chesspieces/redhorse.png',
-  [`${PieceColor.RED}_${PieceType.ROOK}`]: '/Chesspieces/redchariot.png',
-  [`${PieceColor.RED}_${PieceType.CANNON}`]: '/Chesspieces/redcannon.png',
-  [`${PieceColor.RED}_${PieceType.PAWN}`]: '/Chesspieces/redsoldier.png',
+  [`${PieceColor.RED}_${PieceType.KING}`]: 'Chesspieces/redgeneral.png',
+  [`${PieceColor.RED}_${PieceType.ADVISOR}`]: 'Chesspieces/redadvisor.png',
+  [`${PieceColor.RED}_${PieceType.ELEPHANT}`]: 'Chesspieces/redelephant.png',
+  [`${PieceColor.RED}_${PieceType.HORSE}`]: 'Chesspieces/redhorse.png',
+  [`${PieceColor.RED}_${PieceType.ROOK}`]: 'Chesspieces/redchariot.png',
+  [`${PieceColor.RED}_${PieceType.CANNON}`]: 'Chesspieces/redcannon.png',
+  [`${PieceColor.RED}_${PieceType.PAWN}`]: 'Chesspieces/redsoldier.png',
 
   // Black Pieces
-  [`${PieceColor.BLACK}_${PieceType.KING}`]: '/Chesspieces/blackgeneral.png',
-  [`${PieceColor.BLACK}_${PieceType.ADVISOR}`]: '/Chesspieces/blackadvisor.png',
-  [`${PieceColor.BLACK}_${PieceType.ELEPHANT}`]: '/Chesspieces/blackelephant.png',
-  [`${PieceColor.BLACK}_${PieceType.HORSE}`]: '/Chesspieces/blackhorse.png',
-  [`${PieceColor.BLACK}_${PieceType.ROOK}`]: '/Chesspieces/blackchariot.png',
-  [`${PieceColor.BLACK}_${PieceType.CANNON}`]: '/Chesspieces/blackcannon.png',
-  [`${PieceColor.BLACK}_${PieceType.PAWN}`]: '/Chesspieces/blacksoldier.png',
+  [`${PieceColor.BLACK}_${PieceType.KING}`]: 'Chesspieces/blackgeneral.png',
+  [`${PieceColor.BLACK}_${PieceType.ADVISOR}`]: 'Chesspieces/blackadvisor.png',
+  [`${PieceColor.BLACK}_${PieceType.ELEPHANT}`]: 'Chesspieces/blackelephant.png',
+  [`${PieceColor.BLACK}_${PieceType.HORSE}`]: 'Chesspieces/blackhorse.png',
+  [`${PieceColor.BLACK}_${PieceType.ROOK}`]: 'Chesspieces/blackchariot.png',
+  [`${PieceColor.BLACK}_${PieceType.CANNON}`]: 'Chesspieces/blackcannon.png',
+  [`${PieceColor.BLACK}_${PieceType.PAWN}`]: 'Chesspieces/blacksoldier.png',
 };
 
 const SETUP_TOOLS = [
