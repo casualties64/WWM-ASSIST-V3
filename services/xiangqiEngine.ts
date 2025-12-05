@@ -21,166 +21,132 @@ export interface EngineResult {
 
 let engineWorker: Worker | null = null;
 let isReady = false;
+let initPromise: Promise<void> | null = null;
 let currentResolve: ((result: EngineResult | null) => void) | null = null;
-let candidatesBuffer: Map<number, MoveCandidate> = new Map(); // Map multipv index to candidate
+let analysisBuffer: { candidates: MoveCandidate[], bestMoveNotation?: string } = { candidates: [] };
 
-// Coordinates mapping
-// Engine (UCI): Files a-i (0-8), Ranks 0-9
-// Fairy-Stockfish Xiangqi:
-// File a=0 (Left) ... i=8 (Right)
-// Rank 0 (Bottom/Red) ... 9 (Top/Black)
-// App Board: x=0 (Left), y=0 (Top/Black), y=9 (Bottom/Red)
-// Mapping: Engine File = App x; Engine Rank = 9 - App y
+// Wukong coordinates: 'a0' (bottom-left) to 'i9' (top-right)
+// App coordinates: x=0 (left) to x=8 (right), y=0 (top) to y=9 (bottom)
 const uciToCoords = (uci: string): { from: [number, number], to: [number, number] } | null => {
     if (!uci || uci.length < 4) return null;
     
     const fileMap: Record<string, number> = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7, 'i': 8 };
     
-    const fFile = fileMap[uci[0]];
-    const fRank = parseInt(uci[1]);
-    const tFile = fileMap[uci[2]];
-    const tRank = parseInt(uci[3]);
+    const fromFile = fileMap[uci[0]];
+    const fromRank = parseInt(uci[1]);
+    const toFile = fileMap[uci[2]];
+    const toRank = parseInt(uci[3]);
 
-    if (fFile === undefined || isNaN(fRank) || tFile === undefined || isNaN(tRank)) return null;
+    if (fromFile === undefined || isNaN(fromRank) || toFile === undefined || isNaN(toRank)) return null;
 
-    // Convert Rank to Y (0->9, 9->0)
-    const fy = 9 - fRank;
-    const ty = 9 - tRank;
+    const fromY = 9 - fromRank;
+    const toY = 9 - toRank;
 
     return {
-        from: [fFile, fy],
-        to: [tFile, ty]
+        from: [fromFile, fromY],
+        to: [toFile, toY]
     };
 };
 
-async function fetchStockfishScript(): Promise<{ content: string, url: string }> {
-    const pathsToTry = [];
-    
-    // Robustly determine base URL to avoid "Cannot read properties of undefined" errors
-    let envBase = '/';
-    try {
-        const meta = import.meta as any;
-        if (meta && meta.env && meta.env.BASE_URL) {
-            envBase = meta.env.BASE_URL;
-        }
-    } catch (e) {
-        console.warn("Could not access import.meta.env.BASE_URL, defaulting to '/'");
-    }
-    
-    if (!envBase.endsWith('/')) envBase += '/';
-    
-    // 1. Configured path
-    pathsToTry.push(`${envBase}fairy-stockfish/stockfish.js`);
-    
-    // 2. Try standard public folder path (often works in dev)
-    pathsToTry.push('/fairy-stockfish/stockfish.js');
-    
-    // 3. Try relative path (fallback)
-    pathsToTry.push('fairy-stockfish/stockfish.js');
+export const initEngine = () => {
+    if (initPromise) return initPromise;
 
-    // 4. CDN Fallbacks (Use specific version to ensure compatibility)
-    pathsToTry.push('https://cdn.jsdelivr.net/npm/fairy-stockfish-nnue.wasm@1.1.7/stockfish.js');
-    pathsToTry.push('https://unpkg.com/fairy-stockfish-nnue.wasm@1.1.7/stockfish.js');
+    initPromise = (async () => {
+        if (engineWorker) return;
 
-    // Remove duplicates
-    const uniquePaths = [...new Set(pathsToTry)];
-
-    for (const path of uniquePaths) {
         try {
-            // Resolve against current location to get absolute URL for fetch
-            // This handles cases where window.location is in a subdir, but handles absolute URLs correctly
-            const resolvedUrl = new URL(path, window.location.href).toString();
-            const response = await fetch(resolvedUrl);
-            if (response.ok) {
-                const content = await response.text();
-                // Basic validation to ensure we didn't get an HTML 404 page
-                if (content.trim().startsWith('<!DOCTYPE html>') || content.trim().startsWith('<html')) {
-                    console.warn(`Path ${path} returned HTML instead of JS, skipping.`);
-                    continue;
-                }
-                console.log(`[Xiangqi Engine] Successfully loaded engine from: ${resolvedUrl}`);
-                return { content, url: resolvedUrl };
+            console.log("[Wukong Engine] Initializing...");
+            
+            let wukongPath = '/wukong.js';
+            try {
+                const base = (import.meta as any)?.env?.BASE_URL || '/';
+                wukongPath = base.endsWith('/') ? `${base}wukong.js` : `${base}/wukong.js`;
+            } catch(e) {
+                console.warn("Could not access import.meta.env, using default path for Wukong engine.");
             }
-        } catch (e) {
-            console.warn(`[Xiangqi Engine] Failed to fetch stockfish from ${path}`, e);
-        }
-    }
-    throw new Error("Could not load stockfish.js from any candidate path. Please ensure 'public/fairy-stockfish/stockfish.js' exists.");
-}
+            
+            const response = await fetch(wukongPath);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch Wukong script from ${wukongPath}`);
+            }
+            const engineScriptContent = await response.text();
 
-export const initEngine = async () => {
-    if (engineWorker) return;
-
-    try {
-        console.log("[Xiangqi Engine] Initializing...");
-        
-        // Fetch the script content first to avoid importScripts() CORS/Path issues in Blob
-        const { content: scriptContent, url: scriptUrl } = await fetchStockfishScript();
-        
-        // Calculate WASM URL based on the successful JS URL
-        // We assume stockfish.wasm is in the same directory
-        const wasmUrl = scriptUrl.replace('stockfish.js', 'stockfish.wasm');
-
-        // Create a blob worker. We embed the script content directly.
-        // We also inject the Module configuration so it finds the WASM file correctly.
-        const blobContent = `
-            var Module = {
-                locateFile: function(path, prefix) {
-                    if (path.indexOf('stockfish.wasm') > -1) {
-                        return '${wasmUrl}';
+            const workerCode = `
+                ${engineScriptContent}
+                
+                let engine = new Engine();
+                
+                // Override console.log to send messages back to the main thread
+                self.console = {
+                    ...self.console,
+                    log: function(...args) {
+                        self.postMessage({ type: 'log', data: args.join(' ') });
+                    },
+                    error: function(...args) {
+                        self.postMessage({ type: 'error', data: args.join(' ') });
                     }
-                    return prefix + path;
+                };
+
+                self.onmessage = function(e) {
+                    const { type, payload } = e.data;
+                    
+                    if (type === 'analyze') {
+                        if (!engine) {
+                            self.postMessage({ type: 'error', data: 'Engine not initialized.' });
+                            return;
+                        }
+                        engine.setBoard(payload.fen);
+                        engine.search(payload.depth);
+                    }
+                };
+                
+                self.postMessage({ type: 'ready' });
+            `;
+            
+            const blob = new Blob([workerCode], { type: 'application/javascript' });
+            engineWorker = new Worker(URL.createObjectURL(blob));
+
+            engineWorker.onmessage = (e) => {
+                const { type, data } = e.data;
+                if (type === 'ready') {
+                    isReady = true;
+                    console.log("[Wukong Engine] Ready!");
+                } else if (type === 'log') {
+                    handleEngineOutput(data);
+                } else if (type === 'error') {
+                    console.error("[Wukong Worker Error]", data);
                 }
             };
-            // End of Module config
-            
-            ${scriptContent}
-        `;
 
-        const blob = new Blob([blobContent], { type: 'application/javascript' });
-        const blobUrl = URL.createObjectURL(blob);
+            engineWorker.onerror = (err) => {
+                console.error("Wukong Worker Error:", err);
+                isReady = false;
+                engineWorker = null; // Allow re-initialization
+                initPromise = null;
+            };
+        
+        } catch (e) {
+            console.error("Failed to initialize Wukong engine:", e);
+            initPromise = null;
+        }
+    })();
 
-        engineWorker = new Worker(blobUrl);
-
-        engineWorker.onmessage = (e) => {
-            const line = e.data;
-            
-            if (line === 'uciok') {
-                engineWorker?.postMessage('setoption name UCI_Variant value xiangqi');
-                engineWorker?.postMessage('setoption name MultiPV value 3'); // Request 3 best moves
-                engineWorker?.postMessage('isready');
-            } else if (line === 'readyok') {
-                isReady = true;
-                console.log("[Xiangqi Engine] Ready!");
-            } else {
-                handleEngineOutput(line);
-            }
-        };
-
-        engineWorker.onerror = (err) => {
-            console.error("Fairy Stockfish Worker Error:", err);
-        };
-
-        engineWorker.postMessage('uci');
-
-    } catch (e) {
-        console.error("Failed to initialize engine:", e);
-    }
+    return initPromise;
 };
 
 const handleEngineOutput = (line: string) => {
     if (typeof line !== 'string') return;
-
-    if (line.startsWith('info') && line.includes('score') && line.includes('pv')) {
+    
+    if (line.startsWith('info score')) {
         parseInfoLine(line);
     }
 
     if (line.startsWith('bestmove')) {
         const parts = line.split(' ');
-        const bestMoveStr = parts[1];
+        analysisBuffer.bestMoveNotation = parts[1];
         
         if (currentResolve) {
-            const result = finalizeResult(bestMoveStr);
+            const result = finalizeResult();
             currentResolve(result);
             currentResolve = null;
         }
@@ -188,33 +154,30 @@ const handleEngineOutput = (line: string) => {
 };
 
 const parseInfoLine = (line: string) => {
-    let multipv = 1;
-    const mpvMatch = line.match(/multipv (\d+)/);
-    if (mpvMatch) multipv = parseInt(mpvMatch[1]);
-
+    const parts = line.split(' ');
     let score = 0;
-    const scoreCpMatch = line.match(/score cp (-?\d+)/);
-    const scoreMateMatch = line.match(/score mate (-?\d+)/);
-
-    if (scoreMateMatch) {
-        const movesToMate = parseInt(scoreMateMatch[1]);
-        // Prefer shorter mate
-        score = movesToMate > 0 ? 20000 - movesToMate : -20000 - movesToMate;
-    } else if (scoreCpMatch) {
-        score = parseInt(scoreCpMatch[1]);
-    }
-
-    const pvIndex = line.indexOf(' pv ');
     let pvMoves: string[] = [];
+
+    const scoreCpIndex = parts.indexOf('cp');
+    const scoreMateIndex = parts.indexOf('mate');
+    const pvIndex = parts.indexOf('pv');
+
+    if (scoreMateIndex !== -1) {
+        const movesToMate = parseInt(parts[scoreMateIndex + 1]);
+        score = (movesToMate > 0 ? 32000 - movesToMate : -32000 - movesToMate);
+    } else if (scoreCpIndex !== -1) {
+        score = parseInt(parts[scoreCpIndex + 1]);
+    }
+    
     if (pvIndex !== -1) {
-        pvMoves = line.substring(pvIndex + 4).split(' ');
+        pvMoves = parts.slice(pvIndex + 1);
     }
     
     if (pvMoves.length > 0) {
         const moveStr = pvMoves[0];
         const coords = uciToCoords(moveStr);
         if (coords) {
-            candidatesBuffer.set(multipv, {
+            const candidate: MoveCandidate = {
                 move: {
                     from: coords.from,
                     to: coords.to,
@@ -222,71 +185,70 @@ const parseInfoLine = (line: string) => {
                 },
                 score: score,
                 pv: pvMoves
-            });
+            };
+            
+            const existingIndex = analysisBuffer.candidates.findIndex(c => c.move.notation === moveStr);
+            if (existingIndex !== -1) {
+                analysisBuffer.candidates[existingIndex] = candidate;
+            } else {
+                analysisBuffer.candidates.push(candidate);
+            }
         }
     }
 };
 
-const finalizeResult = (bestMoveUci: string): EngineResult | null => {
-    // Convert map to array and sort by score descending
-    const candidates = Array.from(candidatesBuffer.values()).sort((a, b) => b.score - a.score);
-    candidatesBuffer.clear();
-
-    const bestMoveCoords = uciToCoords(bestMoveUci);
+const finalizeResult = (): EngineResult | null => {
+    if (!analysisBuffer.bestMoveNotation) return null;
+    
+    const bestMoveCoords = uciToCoords(analysisBuffer.bestMoveNotation);
     if (!bestMoveCoords) return null;
 
-    const bestCandidate = candidates.find(c => c.move.notation === bestMoveUci) || candidates[0];
+    analysisBuffer.candidates.sort((a, b) => b.score - a.score);
+
+    const bestCandidate = analysisBuffer.candidates.find(c => c.move.notation === analysisBuffer.bestMoveNotation) || analysisBuffer.candidates[0];
     
     let scoreDisplay = "?";
     if (bestCandidate) {
-        if (Math.abs(bestCandidate.score) > 10000) {
-             scoreDisplay = `Mate`;
+        if (Math.abs(bestCandidate.score) > 30000) {
+             const mateIn = 32000 - Math.abs(bestCandidate.score);
+             scoreDisplay = `Mate in ${mateIn}`;
         } else {
-             // Engine CP score is relative to side to move. 
              scoreDisplay = (bestCandidate.score / 100).toFixed(2);
         }
     }
 
-    return {
+    const result = {
         bestMove: {
             from: bestMoveCoords.from,
             to: bestMoveCoords.to,
-            notation: bestMoveUci
+            notation: analysisBuffer.bestMoveNotation
         },
-        candidates: candidates,
+        candidates: analysisBuffer.candidates,
         explanation: `Eval: ${scoreDisplay}`
     };
+
+    analysisBuffer = { candidates: [] };
+    return result;
 };
 
-export const getBestMove = async (fen: string, depth: number = 15): Promise<EngineResult | null> => {
-    if (!engineWorker) {
-        await initEngine();
-        if (!engineWorker) return null;
+export const getBestMove = async (fen: string, depth: number = 7): Promise<EngineResult | null> => {
+    await initEngine();
+
+    if (!isReady || !engineWorker) {
+        console.error("Engine could not be initialized or is not ready.");
+        return null;
     }
 
-    // Reset state
-    candidatesBuffer.clear();
+    analysisBuffer = { candidates: [] };
 
     return new Promise((resolve) => {
         currentResolve = resolve;
-        
-        const runAnalysis = () => {
-             engineWorker?.postMessage(`position fen ${fen}`);
-             engineWorker?.postMessage(`go depth ${depth}`);
-        };
-
-        if (!isReady) {
-            setTimeout(runAnalysis, 500);
-        } else {
-            runAnalysis();
-        }
+        engineWorker!.postMessage({ type: 'analyze', payload: { fen, depth } });
     });
 };
 
 export const boardToFen = (board: BoardState, turn: PieceColor): string => {
   let fen = "";
-  // Rank 9 (Top) to Rank 0 (Bottom)
-  // App Y=0 is Rank 9. App Y=9 is Rank 0.
   for (let y = 0; y < 10; y++) { 
     let emptyCount = 0;
     for (let x = 0; x < 9; x++) {
@@ -298,18 +260,9 @@ export const boardToFen = (board: BoardState, turn: PieceColor): string => {
           fen += emptyCount;
           emptyCount = 0;
         }
-        let char = '';
-        switch (piece.type) {
-          case PieceType.KING: char = 'k'; break;
-          case PieceType.ADVISOR: char = 'a'; break;
-          case PieceType.ELEPHANT: char = 'b'; break;
-          case PieceType.HORSE: char = 'n'; break;
-          case PieceType.ROOK: char = 'r'; break;
-          case PieceType.CANNON: char = 'c'; break;
-          case PieceType.PAWN: char = 'p'; break;
-        }
         
-        // Red is Uppercase
+        let char = piece.type as string;
+        
         if (piece.color === PieceColor.RED) {
           char = char.toUpperCase();
         }

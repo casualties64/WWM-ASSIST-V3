@@ -14,8 +14,8 @@ export enum PieceColor {
 export enum PieceType {
   KING = 'k',
   ADVISOR = 'a',
-  ELEPHANT = 'b', // Bishop in FEN
-  HORSE = 'n', // Knight
+  ELEPHANT = 'e', // Wukong uses 'e' for Elephant/Bishop
+  HORSE = 'h', // Wukong uses 'h' for Horse/Knight
   ROOK = 'r',
   CANNON = 'c',
   PAWN = 'p'

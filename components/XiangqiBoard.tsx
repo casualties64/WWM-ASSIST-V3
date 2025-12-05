@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { BoardState, PieceColor, PieceType, Piece } from '../types';
 import { getBestMove, boardToFen, initEngine } from '../services/xiangqiEngine';
@@ -801,7 +800,7 @@ export const XiangqiBoard: React.FC = () => {
         <div className="p-4 border-b border-stone-800 bg-stone-900/50">
              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg lg:text-xl font-bold text-amber-500 flex items-center gap-2">
-                    <Cpu size={20} /> Fairy Stockfish AI
+                    <Cpu size={20} /> Wukong AI
                 </h2>
 
                 {/* Mobile Analyze Button */}
@@ -909,7 +908,7 @@ export const XiangqiBoard: React.FC = () => {
                     {isAnalyzing ? (
                         <div className="h-40 flex flex-col items-center justify-center text-stone-500 space-y-3">
                             <Loader2 className="animate-spin text-amber-600" size={32} />
-                            <p className="text-sm font-medium">Stockfish is calculating...</p>
+                            <p className="text-sm font-medium">Wukong is calculating...</p>
                         </div>
                     ) : analysisResult ? (
                         <div className="bg-stone-900/80 p-5 rounded-xl border border-stone-800 animate-in fade-in slide-in-from-bottom-2">

@@ -6,20 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && touch dist/.nojekyll",
-    "preview": "vite preview",
-    "postinstall": "node copy-engine.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "lucide-react": "^0.378.0",
-    "ffish-es6": "^0.7.8",
     "@capacitor/core": "^6.0.0",
     "@capacitor/android": "^6.0.0",
     "@google/genai": "*",
     "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.1",
-    "fairy-stockfish-nnue.wasm": "^1.1.7"
+    "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
