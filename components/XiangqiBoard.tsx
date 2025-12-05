@@ -341,41 +341,38 @@ export const XiangqiBoard: React.FC = () => {
   }, []);
 
   const checkForRepetition = (history: MoveRecord[], candidateMove: MoveRecord): boolean => {
-      // Logic: A move is repetitive if it completes a sequence that looks like A-B-A-B-A-B-A-B (4 full cycles)
-      // The candidateMove would be the 9th move in this sequence (or 5th time playing A)
-      // Current History: ... A, B, A, B, A, B, A, B
-      // Next Move: A?
-      // We look back at history.
+      // Check if playing candidateMove would constitute the 3rd repetition of a move sequence.
+      // Sequence: Me(A), Opp(B).
+      // History: ... A(1), B(1), A(2), B(2).
+      // Candidate: A(3).
       
       const len = history.length;
-      if (len < 8) return false;
-      
-      // Candidate "from-to" string
-      const cStr = `${candidateMove.from}->${candidateMove.to}`;
-      
-      // Check if this move matches move at -4, -8, -12 (indices relative to next slot)
-      // History indices: len-4, len-8, len-12, len-16
-      
-      const last4 = history[len - 4];
-      const last8 = history[len - 8];
-      
-      if (!last4 || !last8) return false;
-      
-      const m4 = `${last4.from}->${last4.to}`;
-      const m8 = `${last8.from}->${last8.to}`;
-      
-      if (cStr === m4 && cStr === m8) {
-          // This move has been played 3 times in a short loop (current + 2 past occurrences)
-          // 5 times is the request. Let's check further.
-          if (len >= 16) {
-              const last12 = history[len - 12];
-              const last16 = history[len - 16];
-              const m12 = `${last12.from}->${last12.to}`;
-              const m16 = `${last16.from}->${last16.to}`;
-              
-              if (cStr === m12 && cStr === m16) {
-                  return true; // 5th occurrence
-              }
+      // We need at least 2 full cycles (4 moves) to establish a pattern to repeat a 3rd time.
+      if (len < 4) return false;
+
+      const candFrom = candidateMove.from;
+      const candTo = candidateMove.to;
+
+      // Moves are indexed 0 to len-1.
+      // len-1: Opponent Last
+      // len-2: My Last
+      // len-3: Opponent Prev
+      // len-4: My Prev
+
+      const myLast = history[len - 2];
+      const oppLast = history[len - 1];
+      const myPrev = history[len - 4];
+      const oppPrev = history[len - 3];
+
+      // Check if the previous cycle (A, B) occurred
+      const isCycleRepeated = 
+          myLast.from === myPrev.from && myLast.to === myPrev.to &&
+          oppLast.from === oppPrev.from && oppLast.to === oppPrev.to;
+
+      if (isCycleRepeated) {
+          // Check if candidate matches 'A' (My moves)
+          if (candFrom === myLast.from && candTo === myLast.to) {
+              return true; // Playing this move would start the 3rd repetition of the cycle
           }
       }
       return false;
@@ -416,13 +413,15 @@ export const XiangqiBoard: React.FC = () => {
                     };
                     
                     if (checkForRepetition(moveHistory, cMoveRec)) {
-                        console.log("Skipping repetitive move:", candidate.move.notation);
+                        console.log("Skipping repetitive move to avoid draw:", candidate.move.notation);
                         continue;
                     }
                     
                     // Found a valid move
                     selectedMove = candidate.move;
-                    explanation = `Score: ${(candidate.score/100).toFixed(2)} (Alternative chosen to avoid repetition)`;
+                    if (candidate !== result.candidates[0]) {
+                        explanation = `Score: ${(candidate.score/100).toFixed(2)} (Alternative chosen to avoid repetition)`;
+                    }
                     break;
                 }
             }
