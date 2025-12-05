@@ -1,4 +1,3 @@
-
 import { BoardState, PieceColor } from '../types';
 import { GoogleGenAI } from '@google/genai';
 
@@ -30,7 +29,7 @@ let analysisBuffer: { candidates: MoveCandidate[], bestMoveNotation?: string } =
 // Wukong coordinates: 'a0' (bottom-left) to 'i9' (top-right)
 // App coordinates: x=0 (left) to x=8 (right), y=0 (top) to y=9 (bottom)
 const uciToCoords = (uci: string): { from: [number, number], to: [number, number] } | null => {
-    if (!uci || uci.length < 4 || uci.includes('x')) return null;
+    if (!uci || uci.length < 4) return null;
     
     const fileMap: Record<string, number> = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7, 'i': 8 };
     
@@ -147,44 +146,49 @@ const handleEngineOutput = async (line: string) => {
         const parts = line.split(' ');
         analysisBuffer.bestMoveNotation = parts[1];
         
-        if (analysisBuffer.bestMoveNotation === 'xxxx') {
+        // This is the "terminal position" case from wukong.js
+        if (analysisBuffer.bestMoveNotation === 'xxxx' || !currentAnalysisRequest) {
             if (currentAnalysisRequest) {
                 const result: EngineResult = {
                     bestMove: null,
                     candidates: [],
-                    explanation: "Checkmate or stalemate. No legal moves."
+                    explanation: "Position is a checkmate or stalemate. No legal moves available."
                 };
                 currentAnalysisRequest.resolve(result);
-                currentAnalysisRequest = null;
             }
+            currentAnalysisRequest = null;
             return;
         }
         
-        if (currentAnalysisRequest) {
-            const result = finalizeResult();
+        const result = finalizeResult();
 
-            if (result && result.bestMove) {
-                try {
-                    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-                    const prompt = `You are a Xiangqi (Chinese Chess) expert. The current board state is given by the FEN: "${currentAnalysisRequest.fen}". The player to move is ${currentAnalysisRequest.turn === 'w' ? 'Red' : 'Black'}. The engine suggests the best move is ${result.bestMove.notation}. The engine's evaluation is ${result.explanation}. Provide a concise, user-friendly explanation for why this is a good move. Focus on the strategic idea behind the move in 1-2 sentences. Example: "This move develops your rook to an active file, preparing to attack the enemy general."`;
-                    
-                    const response = await ai.models.generateContent({
-                        model: 'gemini-2.5-flash',
-                        contents: prompt,
-                    });
-
-                    if (response.text) {
-                        result.explanation = response.text.trim().replace(/^"|"$/g, ''); // Clean quotes
-                    }
-                } catch (e) {
-                    console.error("Gemini explanation failed:", e);
-                    // Do not fail the whole analysis, just use the engine's eval
-                }
-            }
-            
-            currentAnalysisRequest.resolve(result);
+        if (!result || !result.bestMove) {
+            console.error("Failed to finalize engine result from notation:", analysisBuffer.bestMoveNotation);
+            currentAnalysisRequest.resolve(null);
             currentAnalysisRequest = null;
+            return;
         }
+
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const prompt = `You are a Xiangqi (Chinese Chess) expert. The current board state is FEN: "${currentAnalysisRequest.fen}". The player to move is ${currentAnalysisRequest.turn === 'w' ? 'Red' : 'Black'}. The engine's top move is ${result.bestMove.notation}. Briefly explain the strategic idea behind this move for a beginner. (1-2 sentences).`;
+            
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            });
+
+            const explanation = response.text;
+            if (explanation) {
+                result.explanation = explanation.trim();
+            }
+        } catch (e) {
+            console.error("Gemini explanation failed:", e);
+            // Fallback to engine eval, which is already in result.explanation
+        }
+        
+        currentAnalysisRequest.resolve(result);
+        currentAnalysisRequest = null;
     }
 };
 

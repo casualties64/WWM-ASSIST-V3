@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { BoardState, PieceColor, PieceType, Piece } from '../types';
 import { getBestMove, boardToFen, initEngine, EngineResult } from '../services/xiangqiEngine';
@@ -326,7 +325,7 @@ export const XiangqiBoard: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<EngineResult | null>(null);
   
   const [autoAnalyze, setAutoAnalyze] = useState(false);
-  const currentFenRef = useRef("");
+  const isAnalyzingRef = useRef(false);
 
   // Setup Mode State
   const [setupMode, setSetupMode] = useState(false);
@@ -340,124 +339,44 @@ export const XiangqiBoard: React.FC = () => {
     initEngine();
   }, []);
 
-  const checkForRepetition = (history: MoveRecord[], candidateMove: MoveRecord): boolean => {
-      // Check if playing candidateMove would constitute the 3rd repetition of a move sequence.
-      // Sequence: Me(A), Opp(B).
-      // History: ... A(1), B(1), A(2), B(2).
-      // Candidate: A(3).
-      
-      const len = history.length;
-      // We need at least 2 full cycles (4 moves) to establish a pattern to repeat a 3rd time.
-      if (len < 4) return false;
-
-      const candFrom = candidateMove.from;
-      const candTo = candidateMove.to;
-
-      // Moves are indexed 0 to len-1.
-      // len-1: Opponent Last
-      // len-2: My Last
-      // len-3: Opponent Prev
-      // len-4: My Prev
-
-      const myLast = history[len - 2];
-      const oppLast = history[len - 1];
-      const myPrev = history[len - 4];
-      const oppPrev = history[len - 3];
-
-      // Check if the previous cycle (A, B) occurred
-      const isCycleRepeated = 
-          myLast.from === myPrev.from && myLast.to === myPrev.to &&
-          oppLast.from === oppPrev.from && oppLast.to === oppPrev.to;
-
-      if (isCycleRepeated) {
-          // Check if candidate matches 'A' (My moves)
-          if (candFrom === myLast.from && candTo === myLast.to) {
-              return true; // Playing this move would start the 3rd repetition of the cycle
-          }
-      }
-      return false;
-  };
-
   const handleAnalyze = async () => {
-    if (winner || isAnalyzing) return;
+    if (winner || isAnalyzingRef.current) return;
 
-    const fenToAnalyze = boardToFen(board, turn);
-    
+    isAnalyzingRef.current = true;
     setIsAnalyzing(true);
     setAnalysisError(false);
-
     if (!autoAnalyze) {
       setAnalysisResult(null);
     }
     
+    const fenToAnalyze = boardToFen(board, turn);
+
     try {
-        const result = await getBestMove(fenToAnalyze, turn, 7); // Depth 7 for stronger play
+        const result = await getBestMove(fenToAnalyze, turn, 7);
         
-        // Stale check
-        if (fenToAnalyze !== currentFenRef.current) {
-          setIsAnalyzing(false);
-          return;
-        }
-        
-        if (result && result.bestMove) {
-            // Repetition Check
-            let selectedMove = result.bestMove;
-
-            if (result.candidates && result.candidates.length > 0) {
-                for (const candidate of result.candidates) {
-                    if (!candidate.move) continue;
-                    const cMoveRec: MoveRecord = { 
-                        from: `${candidate.move.from[0]},${candidate.move.from[1]}`,
-                        to: `${candidate.move.to[0]},${candidate.move.to[1]}`
-                    };
-                    
-                    if (checkForRepetition(moveHistory, cMoveRec)) {
-                        console.log("Skipping repetitive move to avoid draw:", candidate.move.notation);
-                        continue;
-                    }
-                    
-                    selectedMove = candidate.move;
-                    break;
-                }
-            }
-            
-            const [fx, fy] = selectedMove.from;
-            const [tx, ty] = selectedMove.to;
-            const isLegal = isValidMove(board, fx, fy, tx, ty, turn);
-
-            if (isLegal) {
-                setAnalysisResult(result);
-                setAnalysisError(false);
-            } else {
-                console.warn("Engine suggested illegal move:", selectedMove);
-                setAnalysisError(true);
-                if (!autoAnalyze) setAnalysisResult(null);
-            }
-        } else if (result && result.bestMove === null) {
-            // Handle terminal positions (checkmate/stalemate)
+        if (result) {
             setAnalysisResult(result);
             setAnalysisError(false);
         } else {
+            console.warn("Analysis returned null, likely an engine error or invalid position.");
             setAnalysisError(true);
             if (!autoAnalyze) setAnalysisResult(null);
         }
     } catch (e) {
-        console.error("Engine Error", e);
+        console.error("Engine analysis failed:", e);
         setAnalysisError(true);
+        if (!autoAnalyze) setAnalysisResult(null);
+    } finally {
+        setIsAnalyzing(false);
+        isAnalyzingRef.current = false;
     }
-    
-    setIsAnalyzing(false);
   };
 
   // Auto-Analyze Effect (Triggers on Board/Turn Change)
   useEffect(() => {
     if (setupMode || winner) return;
 
-    const newFen = boardToFen(board, turn);
-    currentFenRef.current = newFen;
-
     if (autoAnalyze) {
-      // ONLY analyze automatically if it is RED's turn.
       if (turn === PieceColor.RED) {
           handleAnalyze();
       } else {
@@ -469,14 +388,13 @@ export const XiangqiBoard: React.FC = () => {
   // Robust Retry: If Auto-Analyze is on but errored, retry periodically
   useEffect(() => {
     let retryTimer: ReturnType<typeof setTimeout>;
-    // Only retry if it's Red's turn in auto mode and not currently analyzing and not game over
-    if (autoAnalyze && analysisError && !setupMode && !isAnalyzing && turn === PieceColor.RED && !winner) {
+    if (autoAnalyze && analysisError && !setupMode && !isAnalyzingRef.current && turn === PieceColor.RED && !winner) {
         retryTimer = setTimeout(() => {
             handleAnalyze();
         }, 2000);
     }
     return () => clearTimeout(retryTimer);
-  }, [analysisError, autoAnalyze, setupMode, isAnalyzing, turn, winner]);
+  }, [analysisError, autoAnalyze, setupMode, turn, winner]);
 
   // --- Drag and Drop Handlers ---
   const handleDragStart = (e: React.DragEvent, item: {type: PieceType, color: PieceColor}, fromKey?: string) => {
@@ -904,38 +822,45 @@ export const XiangqiBoard: React.FC = () => {
             ) : (
                 // --- ANALYSIS RESULTS ---
                 <div className="space-y-4">
-                    {isAnalyzing ? (
+                    {isAnalyzing && !analysisResult ? (
                         <div className="h-40 flex flex-col items-center justify-center text-stone-500 space-y-3">
                             <Loader2 className="animate-spin text-amber-600" size={32} />
                             <p className="text-sm font-medium">Wukong is calculating...</p>
                         </div>
                     ) : analysisResult ? (
                         <div className="bg-stone-900/80 p-5 rounded-xl border border-stone-800 animate-in fade-in slide-in-from-bottom-2">
-                            <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
-                                <span className="text-xs font-bold uppercase text-stone-500 tracking-wider">Best Move</span>
-                                <span className="text-amber-500 font-mono font-bold text-lg">{analysisResult.bestMove ? analysisResult.bestMove.notation : 'N/A'}</span>
-                            </div>
-                            
-                            {analysisResult.bestMove && (
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className="w-10 h-10 bg-stone-800 rounded-full flex items-center justify-center text-stone-400 font-mono text-xs">
-                                            {analysisResult.bestMove.from.join(',')}
-                                        </div>
-                                        <span className="text-[10px] text-stone-600 uppercase">From</span>
+                            {analysisResult.bestMove ? (
+                                <>
+                                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-800">
+                                        <span className="text-xs font-bold uppercase text-stone-500 tracking-wider">Best Move</span>
+                                        <span className="text-amber-500 font-mono font-bold text-lg">{analysisResult.bestMove.notation}</span>
                                     </div>
-                                    <ArrowRight className="text-stone-600" />
-                                    <div className="flex flex-col items-center gap-1">
-                                        <div className="w-10 h-10 bg-emerald-900/30 border border-emerald-800 text-emerald-400 rounded-full flex items-center justify-center font-mono text-xs shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                                            {analysisResult.bestMove.to.join(',')}
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="w-10 h-10 bg-stone-800 rounded-full flex items-center justify-center text-stone-400 font-mono text-xs">
+                                                {analysisResult.bestMove.from.join(',')}
+                                            </div>
+                                            <span className="text-[10px] text-stone-600 uppercase">From</span>
                                         </div>
-                                        <span className="text-[10px] text-stone-600 uppercase">To</span>
+                                        <ArrowRight className="text-stone-600" />
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="w-10 h-10 bg-emerald-900/30 border border-emerald-800 text-emerald-400 rounded-full flex items-center justify-center font-mono text-xs shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                                                {analysisResult.bestMove.to.join(',')}
+                                            </div>
+                                            <span className="text-[10px] text-stone-600 uppercase">To</span>
+                                        </div>
                                     </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-2 mb-4 border-b border-stone-800">
+                                    <Trophy size={24} className="mx-auto text-amber-500 mb-2" />
+                                    <p className="text-sm font-bold text-stone-200">Game Over</p>
                                 </div>
                             )}
                             
-                            <div className="bg-stone-950 p-3 rounded-lg border-l-2 border-amber-600">
-                                <p className="text-sm text-stone-300 leading-relaxed italic">
+                            <div className="bg-stone-950 p-3 rounded-lg">
+                                <p className="text-xs text-amber-500 font-bold mb-1 uppercase tracking-wider">Explanation</p>
+                                <p className="text-sm text-stone-300 leading-relaxed">
                                     {analysisResult.explanation}
                                 </p>
                             </div>
