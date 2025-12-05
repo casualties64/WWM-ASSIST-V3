@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Shield, Lock, Eye } from 'lucide-react';
 
@@ -51,10 +50,6 @@ export const PrivacyPolicy: React.FC = () => {
         </h2>
         <p>We utilize third-party services to function. These providers have their own privacy policies:</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <div className="bg-stone-800 p-3 rounded">
-                <strong className="block text-white">Google Gemini API</strong>
-                <p className="text-xs mt-1">Used for natural language processing or advanced analysis. Data sent to Google is subject to Google's Privacy Policy.</p>
-            </div>
             <div className="bg-stone-800 p-3 rounded">
                 <strong className="block text-white">MapGenie</strong>
                 <p className="text-xs mt-1">The interactive map is embedded from MapGenie.io. They may collect cookies and usage data independently.</p>

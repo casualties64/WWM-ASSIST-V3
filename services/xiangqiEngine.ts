@@ -1,5 +1,4 @@
 import { BoardState, PieceColor } from '../types';
-import { GoogleGenAI } from '@google/genai';
 
 // Types for the engine response
 export interface EngineMove {
@@ -169,23 +168,8 @@ const handleEngineOutput = async (line: string) => {
             return;
         }
 
-        try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const prompt = `You are a Xiangqi (Chinese Chess) expert. The current board state is FEN: "${currentAnalysisRequest.fen}". The player to move is ${currentAnalysisRequest.turn === 'w' ? 'Red' : 'Black'}. The engine's top move is ${result.bestMove.notation}. Briefly explain the strategic idea behind this move for a beginner. (1-2 sentences).`;
-            
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
-
-            const explanation = response.text;
-            if (explanation) {
-                result.explanation = explanation.trim();
-            }
-        } catch (e) {
-            console.error("Gemini explanation failed:", e);
-            // Fallback to engine eval, which is already in result.explanation
-        }
+        // We use the static engine evaluation string as the explanation.
+        // Previously this used Gemini AI, but it has been removed.
         
         currentAnalysisRequest.resolve(result);
         currentAnalysisRequest = null;
@@ -263,7 +247,7 @@ const finalizeResult = (): EngineResult | null => {
             notation: analysisBuffer.bestMoveNotation
         },
         candidates: analysisBuffer.candidates,
-        explanation: `Eval: ${scoreDisplay}`
+        explanation: `Evaluation Score: ${scoreDisplay}`
     };
 
     analysisBuffer = { candidates: [] };
