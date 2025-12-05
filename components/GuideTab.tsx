@@ -111,7 +111,7 @@ export const GuideTab: React.FC = () => {
               { id: 'PART2', text: '[CLICK HERE FOR PART 2: Gameplay, UI & "No-Grind" Routine]' },
               { id: 'PART3', text: '[CLICK HERE FOR PART 3: Advanced Weapon Reforging(Weapon skins)]' },
               { id: 'PART4', text: '[CLICK HERE FOR PART 4: Where Winds Meet: The Ultimate Merchant Trading Guide (How to Make Serious Money)]' },
-              { id: 'PART5', text: '[CLICK HERE FOR Part 5: [CN Spoilers] Want to plan your pulls? Here is the complete Cosmetics Roadmap(still update)]' },
+              { id: 'PART5', text: '[CLICK HERE FOR PART 5: Cosmetics Roadmap (CN Spoilers)]' },
           ].map(link => (
             <p key={link.id} className="flex items-start gap-2">
                 <span>👉</span> 
@@ -199,7 +199,6 @@ export const GuideTab: React.FC = () => {
                     <p>However, if you really want to understand how the monetization works—whether you aim to be a strict F2P (Free-to-Play) player or want to spend money efficiently without getting ripped off—taking the time to read this carefully will be very helpful.</p>
                 </div>
                 
-                {/* ... (Rest of Part 1 Content is already implemented, preserving for brevity) ... */}
                 {/* Re-implementing Part 1 core content to ensure it stays active */}
                  <div className="bg-stone-800/50 p-6 rounded-lg border-l-4 border-amber-500 my-6 shadow-lg">
                     <p className="font-bold text-lg text-amber-500 mb-2">⚠️ Important Expectation Management:</p>
@@ -576,7 +575,7 @@ export const GuideTab: React.FC = () => {
                      <img src="https://preview.redd.it/guide-part-4-where-winds-meet-the-ultimate-merchant-trading-v0-7jvca5sfuk2g1.png?width=862&format=png&auto=webp&s=7cb9b070ab71cc3a6726f239b44d79c2ae82ccbb" className="rounded shadow w-full" />
                 </div>
                 <ul className="list-disc pl-5 space-y-3">
-                    <li><strong>Local Fluctuation:</strong> Price changes in your world. If >200%, buying might be disabled.</li>
+                    <li><strong>Local Fluctuation:</strong> Price changes in your world. If &gt;200%, buying might be disabled.</li>
                     <li><strong>Foreign Fluctuation:</strong> Price stable locally. Sell in other players' worlds for profit.</li>
                     <li><strong>Stock Limits:</strong> Refreshes Saturday and Monday. Limit 180/week.</li>
                 </ul>
