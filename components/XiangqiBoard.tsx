@@ -390,7 +390,7 @@ export const XiangqiBoard: React.FC = () => {
     }
     
     try {
-        const result = await getBestMove(fenToAnalyze, 3); // Depth 3
+        const result = await getBestMove(fenToAnalyze, 7); // Depth 7 for stronger play
         
         // Stale check
         if (fenToAnalyze !== currentFenRef.current) {

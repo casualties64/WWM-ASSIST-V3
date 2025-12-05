@@ -59,7 +59,8 @@ export const initEngine = () => {
             
             let wukongPath = '/wukong.js';
             try {
-                const base = (import.meta as any)?.env?.BASE_URL || '/';
+                // FIX: Removed 'as any' cast now that vite-env.d.ts provides proper types for import.meta.env.
+                const base = import.meta.env.BASE_URL || '/';
                 wukongPath = base.endsWith('/') ? `${base}wukong.js` : `${base}/wukong.js`;
             } catch(e) {
                 console.warn("Could not access import.meta.env, using default path for Wukong engine.");

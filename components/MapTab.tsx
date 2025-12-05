@@ -74,6 +74,7 @@ export const MapTab: React.FC = () => {
             className="w-full h-full border-none"
             title="Where Winds Meet Interactive Map - 6Fast"
             sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+            referrerPolicy="no-referrer"
           />
         </div>
         
