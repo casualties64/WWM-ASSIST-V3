@@ -1,4 +1,3 @@
-
 import { BoardState, PieceColor, PieceType } from '../types';
 
 // Types for the engine response
@@ -57,13 +56,20 @@ const uciToCoords = (uci: string): { from: [number, number], to: [number, number
 async function fetchStockfishScript(): Promise<{ content: string, url: string }> {
     const pathsToTry = [];
     
-    // 1. Try constructed path from Vite env
-    // Use type assertion to safely access import.meta.env
-    const meta = import.meta as any;
-    let envBase = (meta && meta.env && meta.env.BASE_URL) ? meta.env.BASE_URL : '/';
+    // Robustly determine base URL to avoid "Cannot read properties of undefined" errors
+    let envBase = '/';
+    try {
+        const meta = import.meta as any;
+        if (meta && meta.env && meta.env.BASE_URL) {
+            envBase = meta.env.BASE_URL;
+        }
+    } catch (e) {
+        console.warn("Could not access import.meta.env.BASE_URL, defaulting to '/'");
+    }
+    
     if (!envBase.endsWith('/')) envBase += '/';
     
-    // Configured path
+    // 1. Configured path
     pathsToTry.push(`${envBase}fairy-stockfish/stockfish.js`);
     
     // 2. Try standard public folder path (often works in dev)
@@ -72,13 +78,17 @@ async function fetchStockfishScript(): Promise<{ content: string, url: string }>
     // 3. Try relative path (fallback)
     pathsToTry.push('fairy-stockfish/stockfish.js');
 
+    // 4. CDN Fallbacks (Use specific version to ensure compatibility)
+    pathsToTry.push('https://cdn.jsdelivr.net/npm/fairy-stockfish-nnue.wasm@1.1.7/stockfish.js');
+    pathsToTry.push('https://unpkg.com/fairy-stockfish-nnue.wasm@1.1.7/stockfish.js');
+
     // Remove duplicates
     const uniquePaths = [...new Set(pathsToTry)];
 
     for (const path of uniquePaths) {
         try {
             // Resolve against current location to get absolute URL for fetch
-            // This handles cases where window.location is in a subdir
+            // This handles cases where window.location is in a subdir, but handles absolute URLs correctly
             const resolvedUrl = new URL(path, window.location.href).toString();
             const response = await fetch(resolvedUrl);
             if (response.ok) {
